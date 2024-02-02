@@ -1,8 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -37,6 +33,14 @@ public class UserAccountServer {
         return existingUserNames.contains(username.trim());
     }
 
+    private static void updateUsernameFile(String newUsername) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(USERNAMES_FP, true))) {
+            writer.println(newUsername);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void handleClient(Socket clientSocket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
@@ -44,18 +48,20 @@ public class UserAccountServer {
 
             if (login(username)) {
                 out.println("Logging in as: " + username);
-                String clientMessage;
-                while ((clientMessage = in.readLine()) != null) {
-                    //this area is for back and forth communication with client
-                    if ("q".equalsIgnoreCase(clientMessage)) {
-                        out.println("Ending communication");
-                        break;
-                    } else {
-                        out.println("Server received: " + clientMessage);
-                    }
-                }
             } else {
-                out.println("Invalid username");
+                out.println("Creating new user: " + username);
+                existingUserNames.add(username);
+                updateUsernameFile(username);
+            }
+            String clientMessage;
+            while ((clientMessage = in.readLine()) != null) {
+                //this area is for back and forth communication with client
+                if ("q".equalsIgnoreCase(clientMessage)) {
+                    out.println("Ending communication");
+                    break;
+                } else {
+                    out.println("Server received: " + clientMessage);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
