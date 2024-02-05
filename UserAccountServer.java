@@ -1,44 +1,55 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class UserAccountServer {
 
-    private static final String USERNAMES_FP = "usernames.txt";
+    private static final String USER_ACCOUNTS_FP = "UserAccounts.txt";
     private static final String USAGE = "Usage: java UserAccountServer [port]";
-    private static List<String> existingUserNames;
+    private static Map<String, User> userAccounts;
 
     static {
-        loadUsernames();
+        loadUserAccounts();
     }
 
-    private static void loadUsernames() {
-        existingUserNames = new ArrayList<>();
+    private static void loadUserAccounts() {
+        userAccounts = new HashMap<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(USERNAMES_FP))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(USER_ACCOUNTS_FP))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                existingUserNames.add(line.trim());
+                String[] parts = line.split(",");
+                if (parts.length == 2) {
+                    String username = parts[0].trim();
+                    int lifetimeWins = Integer.parseInt(parts[1].trim());
+                    userAccounts.put(username, new User(username, lifetimeWins));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static boolean login(String username) {
-        return existingUserNames.contains(username.trim());
-    }
-
-    private static void updateUsernameFile(String newUsername) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(USERNAMES_FP, true))) {
-            writer.println(newUsername);
+    private static void saveUserAccount(User user) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(USER_ACCOUNTS_FP, true))) {
+            writer.println(user.getUsername() + "," + user.getLifetimeWins());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean login(String username) {
+        return userAccounts.containsKey(username.trim());
+    }
+
+    private static void createUser(String username) {
+        User newUser = new User(username, 0);
+        userAccounts.put(username, newUser);
+        saveUserAccount(newUser);
     }
 
     public static void handleClient(Socket clientSocket) {
@@ -50,9 +61,10 @@ public class UserAccountServer {
                 out.println("Logging in as: " + username);
             } else {
                 out.println("Creating new user: " + username);
-                existingUserNames.add(username);
-                updateUsernameFile(username);
+                createUser(username);
             }
+            out.println("Welcome to the server " + username + "!");
+            out.println("Enter 'q' to quit.");
             String clientMessage;
             while ((clientMessage = in.readLine()) != null) {
                 //this area is for back and forth communication with client
