@@ -6,16 +6,25 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Represents a server managing user accounts and handling client interactions.
+ */
 public class UserAccountServer {
 
     private static final String USER_ACCOUNTS_FP = "UserAccounts.txt";
     private static final String USAGE = "Usage: java UserAccountServer [port]";
     private static Map<String, User> userAccounts;
 
+    /**
+     * Static initializer block to load user accounts from file.
+     */
     static {
         loadUserAccounts();
     }
 
+    /**
+     * Loads user accounts from the file into the userAccounts map.
+     */
     private static void loadUserAccounts() {
         userAccounts = new HashMap<>();
 
@@ -34,6 +43,10 @@ public class UserAccountServer {
         }
     }
 
+    /**
+     * Saves user account information to the file.
+     * @param user - The User object containing account information.
+     */
     private static void saveUserAccount(User user) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(USER_ACCOUNTS_FP, true))) {
             writer.println(user.getUsername() + "," + user.getLifetimeWins());
@@ -42,16 +55,29 @@ public class UserAccountServer {
         }
     }
 
+    /**
+     * Checks if a user is already registered
+     * @param username - The username to check for registration
+     * @return - True if the user is registered, False if not.
+     */
     public static boolean login(String username) {
         return userAccounts.containsKey(username.trim());
     }
 
+    /**
+     * Creates a new user and updates userAccounts map and file.
+     * @param username - The username of the new user.
+     */
     private static void createUser(String username) {
         User newUser = new User(username, 0);
         userAccounts.put(username, newUser);
         saveUserAccount(newUser);
     }
 
+    /**
+     * Handles communication with a connected client.
+     * @param clientSocket - The Socket representing the connection to the client.
+     */
     public static void handleClient(Socket clientSocket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
@@ -80,6 +106,10 @@ public class UserAccountServer {
         }
     }
 
+    /**
+     * Main entry point for running the UserAccountServer.
+     * @param args - Command-line arguments, expects a single argument representing the port number to use.
+     */
     public static void main(String[] args) {
         if (args.length != 1) {
             System.err.println(USAGE);
