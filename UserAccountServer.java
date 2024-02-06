@@ -81,6 +81,7 @@ public class UserAccountServer {
     public static void handleClient(Socket clientSocket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+            out.println("Welcome to the server! Please enter your username: ");
             String username = in.readLine().trim();
 
             if (login(username)) {
