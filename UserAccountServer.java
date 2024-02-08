@@ -62,7 +62,7 @@ public class UserAccountServer {
      * @param username - The username to check for registration
      * @return - True if the user is registered, False if not.
      */
-    public static boolean login(String username) {
+    public static synchronized boolean login(String username) {
         return userAccounts.containsKey(username.trim());
     }
 
@@ -70,7 +70,7 @@ public class UserAccountServer {
      * Creates a new user and updates userAccounts map and file.
      * @param username - The username of the new user.
      */
-    private static void createUser(String username) {
+    private static synchronized void createUser(String username) {
         User newUser = new User(username, 0);
         userAccounts.put(username, newUser);
         saveUserAccount(newUser);
