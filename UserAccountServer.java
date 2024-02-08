@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Represents a server managing user accounts and handling client interactions.
@@ -13,6 +14,7 @@ public class UserAccountServer {
 
     private static final String USER_ACCOUNTS_FP = "UserAccounts.txt";
     private static final String USAGE = "Usage: java UserAccountServer [port]";
+    private static final Integer THREAD_COUNT = 20;
     private static Map<String, User> userAccounts;
 
     /**
@@ -85,23 +87,31 @@ public class UserAccountServer {
             String username = in.readLine().trim();
 
             if (login(username)) {
-                out.println("Logging in as: " + username);
+                messageClient(clientSocket, "Logging in as: " + username);
             } else {
-                out.println("Creating new user: " + username);
+                messageClient(clientSocket, "Creating new user: " + username);
                 createUser(username);
             }
-            out.println("Welcome to the server " + username + "!");
-            out.println("Enter 'q' to quit.");
+            messageClient(clientSocket, "Welcome to the server " + username + "!");
+            messageClient(clientSocket, "Enter 'q' to quit.");
             String clientMessage;
             while ((clientMessage = in.readLine()) != null) {
                 //this area is for back and forth communication with client
                 if ("q".equalsIgnoreCase(clientMessage)) {
-                    out.println("Ending communication");
+                    messageClient(clientSocket, "Ending communication");
                     break;
                 } else {
-                    out.println("Server received: " + clientMessage);
+                    messageClient(clientSocket, "Server received: " + clientMessage);
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void messageClient(Socket clientSocket, String message) {
+        try {
+            clientSocket.getOutputStream().write((message + "\n").getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -124,11 +134,17 @@ public class UserAccountServer {
             port = Integer.parseInt(args[0]);
             server = new ServerSocket(port);
             System.out.println("The UserAccount server is running...");
-            ExecutorService fixedThreadPool = Executors.newFixedThreadPool(20);
+            ExecutorService fixedThreadPool = Executors.newFixedThreadPool(THREAD_COUNT);
             while (true) {
                 Socket clientSocket = server.accept();
                 System.out.println("Connection from " + clientSocket.getInetAddress());
-                fixedThreadPool.execute(() -> handleClient(clientSocket));
+
+                if (((ThreadPoolExecutor) fixedThreadPool).getActiveCount() == THREAD_COUNT) {
+                    messageClient(clientSocket, "The server is currently full; try again later.");
+                    clientSocket.close();
+                } else {
+                    fixedThreadPool.execute(() -> handleClient(clientSocket));
+                }
             }
         } catch (IOException e) {
             System.out.println(
