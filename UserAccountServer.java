@@ -81,11 +81,13 @@ public class UserAccountServer {
      * @param clientSocket - The Socket representing the connection to the client.
      */
     public static void handleClient(Socket clientSocket) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-            out.println("Welcome to the server! Please enter your username: ");
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+            messageClient(clientSocket, "Welcome to the server! Please enter your username: ");
             String username = in.readLine().trim();
-
+            if (username.isEmpty()) {
+                messageClient(clientSocket, "invalid username, please try again.");
+                handleClient(clientSocket);
+            }
             if (login(username)) {
                 messageClient(clientSocket, "Logging in as: " + username);
             } else {
