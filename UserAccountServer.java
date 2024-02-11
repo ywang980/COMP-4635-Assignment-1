@@ -2,7 +2,9 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -16,6 +18,7 @@ public class UserAccountServer {
     private static final String USAGE = "Usage: java UserAccountServer [port]";
     private static final Integer THREAD_COUNT = 20;
     private static Map<String, User> userAccounts;
+    private static Set<String> loggedInUsers;
 
     /**
      * Static initializer block to load user accounts from file.
@@ -29,6 +32,7 @@ public class UserAccountServer {
      */
     private static void loadUserAccounts() {
         userAccounts = new HashMap<>();
+        loggedInUsers = new HashSet<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(USER_ACCOUNTS_FP))) {
             String line;
@@ -60,20 +64,41 @@ public class UserAccountServer {
     /**
      * Checks if a user is already registered
      * @param username - The username to check for registration
-     * @return - True if the user is registered, False if not.
+     * @return - 1 if the user is registered and not currently logged in, 2 if the user is not registered and
+     * not logged in, and 0 if the user is not logged in and not registered.
      */
-    public static synchronized boolean login(String username) {
-        return userAccounts.containsKey(username.trim());
+    public static synchronized int login(String username) {
+        if (userAccounts.containsKey(username.trim()) && !loggedInUsers.contains(username.trim())) {
+            loggedInUsers.add(username);
+            return 1;
+        } else if (!userAccounts.containsKey(username.trim()) && !loggedInUsers.contains(username.trim())) {
+            createUser(username);
+            loggedInUsers.add(username);
+            return 2;
+        } else {
+            return 0;
+        }
     }
 
     /**
      * Creates a new user and updates userAccounts map and file.
      * @param username - The username of the new user.
      */
-    private static synchronized void createUser(String username) {
+    private static void createUser(String username) {
         User newUser = new User(username, 0);
         userAccounts.put(username, newUser);
         saveUserAccount(newUser);
+    }
+
+    private static synchronized int logout(String username) {
+        if (loggedInUsers.contains(username.trim())) {
+            User user = userAccounts.get(username);
+            saveUserAccount(user);
+            loggedInUsers.remove(username.trim());
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -88,11 +113,8 @@ public class UserAccountServer {
                 messageClient(clientSocket, "invalid username, please try again.");
                 handleClient(clientSocket);
             }
-            if (login(username)) {
+            if (login(username) == 1) {
                 messageClient(clientSocket, "Logging in as: " + username);
-            } else {
-                messageClient(clientSocket, "Creating new user: " + username);
-                createUser(username);
             }
             messageClient(clientSocket, "Welcome to the server " + username + "!");
             messageClient(clientSocket, "Enter 'q' to quit.");
@@ -101,6 +123,7 @@ public class UserAccountServer {
                 //this area is for back and forth communication with client
                 if ("q".equalsIgnoreCase(clientMessage)) {
                     messageClient(clientSocket, "Ending communication");
+                    logout(username);
                     break;
                 } else {
                     messageClient(clientSocket, "Server received: " + clientMessage);
