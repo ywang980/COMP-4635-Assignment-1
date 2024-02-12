@@ -10,8 +10,9 @@ public class Client {
     static final int port = 1000;
 
     public static void main(String[] args) {
+        Socket clientSocket = null;
         try {
-            Socket clientSocket = new Socket(host, port);
+             clientSocket= new Socket(host, port);
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintStream out = new PrintStream(clientSocket.getOutputStream());
             System.out.println("Connected!");
@@ -25,9 +26,13 @@ public class Client {
                 out.println(clientInput);
             } while (!clientInput.equals("*Exit*"));
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.println("Error: could not communicate with server");
         } finally {
+            if(clientSocket!=null){
+            }
+            System.exit(0);
+
             // Close resources in reverse order
         }
     }
@@ -43,7 +48,11 @@ public class Client {
             }
             System.out.println(stringBuilder.toString());
         } catch (IOException e) {
-            System.err.println("Error: could not print server output.");
+            
+            System.err.println("Error: could not print server output. Exiting");
+            System.exit(0);
+            return;
+
         }
     }
 }

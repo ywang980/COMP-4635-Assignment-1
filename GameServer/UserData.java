@@ -8,6 +8,7 @@ class UserData {
     private GameState gameState;
 
     public UserData(String username) {
+        System.out.println("here2");
         this.username = username;
         this.score = 0;
         this.gameState = new GameState();
@@ -25,10 +26,6 @@ class UserData {
 
     public int getScore() {
         return this.score;
-    }
-
-    public void incrementScore() {
-        this.score += 1;
     }
 
     public GameState getGameState() {

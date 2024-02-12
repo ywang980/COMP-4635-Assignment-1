@@ -1,0 +1,14 @@
+Username;Raph
+Score;0
+State;Play
+Attempts;10
+Words;coat, lacerta, some, maria, fateful
+.....-------..+
+......----....+
+......-----...+
+.....-------..+
+$
+.....lacerta..+
+......some....+
+......maria...+
+.....fateful..+

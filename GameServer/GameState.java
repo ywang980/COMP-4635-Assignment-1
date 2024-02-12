@@ -2,7 +2,7 @@ package GameServer;
 
 import java.io.*;
 
-public class GameState {
+class GameState {
     private String state;
     private int attempts;
     private String[] words;

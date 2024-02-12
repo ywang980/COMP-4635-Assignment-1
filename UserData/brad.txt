@@ -1,0 +1,24 @@
+Username;brad
+Score;0
+State;Play
+Attempts;15
+Words;difficult, windshield, upstair, cranford, sniffle, weight, sanchez, delusive, willard, nat
+.----------.........+
+........------......+
+.......-------......+
+......--------......+
+.....-------........+
+.......-------......+
+.......--------.....+
+.......-------......+
+........---.........+
+$
+.windshield.........+
+........weight......+
+.......sniffle......+
+......cranford......+
+.....upstair........+
+.......sanchez......+
+.......delusive.....+
+.......willard......+
+........nat.........+
