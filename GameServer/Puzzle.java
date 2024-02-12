@@ -120,8 +120,8 @@ class Puzzle {
             // Find random valid row in Stem
             Leaf currentLeaf = matchingRows.get(i);
             ArrayList<Integer> currentMatches = currentLeaf.getMatchingIndices();
-            int randomMatchingRow = Math.abs(currentMatches
-                    .get(new Random().nextInt(currentMatches.size())));
+            int randomMatchingRow = currentMatches
+                    .get(new Random().nextInt(currentMatches.size()));
 
             // Insert Leaf at random valid column, remove index, resort Leaf ArrayList
             insertLeaf(currentLeaf, stemArray[randomMatchingRow],
