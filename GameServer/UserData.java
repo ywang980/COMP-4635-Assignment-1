@@ -27,6 +27,10 @@ class UserData {
         return this.score;
     }
 
+    public void incrementScore() {
+        this.score += 1;
+    }
+
     public GameState getGameState() {
         return this.gameState;
     }

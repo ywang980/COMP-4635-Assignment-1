@@ -87,12 +87,13 @@ public class Game {
             throws Exceptions.DuplicateLoginException {
 
         try (Socket socket = new Socket("localhost", 8081)) {
-            DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+            BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             String output = "login;" + username.trim();
-            dataOut.writeUTF(output);
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            int loginResult = in.readInt();
-            System.out.println("received result: "+ loginResult);
+            dataOut.write(output);
+            dataOut.newLine();
+            dataOut.flush();
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            int loginResult = Integer.parseInt(in.readLine());
             if (loginResult == 0) {
                 throw new Exceptions().new DuplicateLoginException(Constants.DUPLICATE_LOGIN);
             } else {
@@ -142,10 +143,13 @@ public class Game {
 
     private static void logoutUser(String username, PrintStream out) {
         try (Socket socket = new Socket("localhost", 8081)) {
-            DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-            dataOut.writeUTF("logout;" + username.trim());
-            DataInputStream inLogout = new DataInputStream(socket.getInputStream());
-            int logoutResult = inLogout.readInt();
+            BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            String output = "logout;" + username.trim();
+            dataOut.write(output);
+            dataOut.newLine();
+            dataOut.flush();
+            BufferedReader inLogout = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            int logoutResult = Integer.parseInt(inLogout.readLine());
             if (logoutResult == 0) {
                 out.println("Failed to log out user: " + username);
             } else {
@@ -334,14 +338,15 @@ public class Game {
         gameState.setState(Constants.PLAY_STATE);
 
         String input;
-        boolean gameOver;
+        int gameOver;
 
         do {
             out.print("\n" + gameState.getPuzzle().getPuzzleString());
             input = getValidInput(in, out, gameState);
             gameOver = processGameInput(in, out, gameState, input);
-        } while (!gameOver);
+        } while (gameOver == 0);
 
+        if (gameOver == 2) userData.incrementScore();
         saveGame(userData);
     }
 
@@ -361,13 +366,13 @@ public class Game {
         } while (true);
     }
 
-    private static boolean processGameInput(BufferedReader in, PrintStream out,
+    private static int processGameInput(BufferedReader in, PrintStream out,
             GameState gameState, String input) {
         if (input.equals(Constants.SAVE_CODE)) {
-            return true;
+            return 1;
         } else if (input.toCharArray()[0] == '?') {
             processWordQuery(in, out, gameState, input.substring(1));
-            return false;
+            return 0;
         } else {
             return processPuzzleGuess(in, out, gameState, input);
         }
@@ -379,7 +384,7 @@ public class Game {
         out.println("Sending to database microservice: " + "C;" + input);
     }
 
-    private static boolean processPuzzleGuess(BufferedReader in, PrintStream out,
+    private static int processPuzzleGuess(BufferedReader in, PrintStream out,
             GameState gameState, String input) {
         boolean successfulGuess = gameState.getPuzzle().updatePuzzleGrid(input);
         gameState.decrementAttempts();
@@ -389,17 +394,18 @@ public class Game {
             if (gameState.getPuzzle().checkPuzzleSolved()) {
                 gameState.setState(Constants.IDLE_STATE);
                 out.println("You win!");
-                return true;
+
+                return 2;
             }
         } else {
             out.println("\n*Unsuccessful guess: '" + input + "'.");
             if (gameState.getAttempts() == 0) {
                 gameState.setState(Constants.IDLE_STATE);
                 out.println("You lose!");
-                return true;
+                return 1;
             }
         }
-        return false;
+        return 0;
     }
 
     private static void saveGame(UserData userData) throws IOException {

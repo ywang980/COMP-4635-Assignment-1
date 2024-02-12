@@ -3,6 +3,7 @@ package UserAccountServer;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,7 +13,7 @@ import java.util.concurrent.Executors;
  */
 public class UserAccountServer {
 
-    private static final String USER_DATA_DIR = "UserAccountServer/UserData";
+    private static final String USER_DATA_DIR = "./UserData/";
     private static final Integer THREAD_COUNT = 20;
     private static List<String> userAccounts;
     private static Set<String> loggedInUsers;
@@ -70,10 +71,9 @@ public class UserAccountServer {
 
     private static void handleConnection(Socket socket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
 
             String input = in.readLine();
-            System.out.println(input);
             String[] parts = input.split(";");
             if (parts.length == 2) {
                 String operation = parts[0].trim();
@@ -84,9 +84,12 @@ public class UserAccountServer {
                     default -> 0;
                 };
 
-                out.println(result);
+                out.write(String.valueOf(result));
+                out.newLine();
                 out.flush();
             }
+        } catch (SocketException e) {
+          System.out.println("Connection closed");
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
