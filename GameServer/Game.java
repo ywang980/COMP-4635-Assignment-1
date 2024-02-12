@@ -1,5 +1,7 @@
 package GameServer;
 
+import UserAccountServer.UserData;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -101,8 +103,6 @@ public class Game {
                     out.println("Logging in as: " + username);
                 } else {
                     out.println("Creating new account: " + username);
-                    loadUserData(username);
-                    checkValidUser(username, out);
                 }
                 return true;
             }
@@ -113,32 +113,20 @@ public class Game {
 
     private static UserData validateUserData(PrintStream out, String username) {
         UserData userData = null;
-        try {
-            userData = loadUserData(username);
+        try (Socket socket = new Socket("localhost", 8081)) {
+            BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            String output = "load;" + username;
+            dataOut.write(output);
+            dataOut.newLine();
+            dataOut.flush();
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String userDataIn = in.readLine();
+            userData = new UserData(userDataIn);
         } catch (IOException e) {
-            out.println("Error in parsing user data. " + e.getMessage());
-            out.println("Connection will now close." + Constants.MESSAGE_END_DELIM);
+            out.println("Failed to communicate with UserAccount Server: " + e.getMessage());
         }
+
         return userData;
-    }
-
-    private static UserData loadUserData(String username) throws IOException {
-        String filePath = Constants.USER_DATA_DIRECTORY + username + ".txt";
-        File userDataFile = new File(filePath);
-        try {
-            if (!userDataFile.exists()) {
-                userDataFile.createNewFile();
-                return new UserData(username);
-            }
-        } catch (IOException e) {
-            throw new IOException(Constants.CANT_CREATE_USER_FILE);
-        }
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(userDataFile))) {
-            reader.readLine();
-            Integer score = ParseInput.parseIntValue(reader);
-            return new UserData(username, score.intValue(), reader);
-        }
     }
 
     private static void logoutUser(String username, PrintStream out) {

@@ -1,5 +1,7 @@
 package UserAccountServer;
 
+import GameServer.Constants;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -49,7 +51,7 @@ public class UserAccountServer {
      * @return - 1 if the user is registered and not currently logged in, 2 if the user is not registered and
      * not logged in, and 0 if the user is not logged in and not registered.
      */
-    public static synchronized int login(String username) {
+    private static synchronized int login(String username) {
         if (userAccounts.contains(username.trim()) && !loggedInUsers.contains(username.trim())) {
             loggedInUsers.add(username);
             return 1;
@@ -69,22 +71,51 @@ public class UserAccountServer {
         }
     }
 
+    private static synchronized String load(String username) throws IOException {
+        String filePath = USER_DATA_DIR + username + ".txt";
+        File userDatafile = new File(filePath);
+        try {
+            if (!userDatafile.exists()) {
+                userDatafile.createNewFile();
+                UserData userData = new UserData(username, true);
+                return userData.getUserDataString();
+            }
+        } catch (IOException e) {
+            throw new IOException(Constants.CANT_CREATE_USER_FILE);
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(userDatafile))) {
+            StringBuilder userDataBuilder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                userDataBuilder.append(line).append("\n");
+            }
+            return userDataBuilder.toString();
+        }
+    }
+
     private static void handleConnection(Socket socket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
+
+            int result = -1;
+            String stringResult = "";
 
             String input = in.readLine();
             String[] parts = input.split(";");
             if (parts.length == 2) {
                 String operation = parts[0].trim();
                 String argument = parts[1].trim();
-                int result = switch (operation) {
-                    case "login" -> login(argument);
-                    case "logout" -> logout(argument);
-                    default -> 0;
-                };
-
-                out.write(String.valueOf(result));
+                switch (operation) {
+                    case "login" -> result = login(argument);
+                    case "logout" -> result = logout(argument);
+                    case "load" -> stringResult = load(argument);
+                }
+                if (result != -1) {
+                    out.write(String.valueOf(result));
+                } else {
+                    out.write(stringResult);
+                }
                 out.newLine();
                 out.flush();
             }

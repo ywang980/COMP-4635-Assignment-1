@@ -19,13 +19,15 @@ public class GameState {
         this.puzzle = new Puzzle(this.words);
     }
 
-    public GameState(BufferedReader reader) throws IOException {
-        this.state = ParseInput.parseStringValue(reader);
-        if (this.state.equals(Constants.PLAY_STATE)) {
-            this.attempts = ParseInput.parseIntValue(reader);
-            String wordsData = ParseInput.parseStringValue(reader);
-            this.words = wordsData.split(",");
-            this.puzzle = new Puzzle(this.words[0], reader);
+    public GameState(String data) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new StringReader(data))) {
+            this.state = ParseInput.parseStringValue(reader);
+            if (this.state.equals(Constants.PLAY_STATE)) {
+                this.attempts = ParseInput.parseIntValue(reader);
+                String wordsData = ParseInput.parseStringValue(reader);
+                this.words = wordsData.split(",");
+                this.puzzle = new Puzzle(this.words[0], reader);
+            }
         }
     }
 

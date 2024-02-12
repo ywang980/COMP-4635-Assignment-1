@@ -1,6 +1,6 @@
 package GameServer;
 
-class Constants {
+public class Constants {
         public static final String USER_DATA_DIRECTORY = "./UserData/";
 
         public static final int MAX_WORD_COUNT = 15;
