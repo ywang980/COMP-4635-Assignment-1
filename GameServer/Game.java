@@ -62,8 +62,7 @@ public class Game {
         while (!validUserName) {
             username = promptUserName(clientSocket, in, out);
             try {
-                checkValidUser(username);
-                validUserName = true;
+                validUserName = checkValidUser(username, out);
             } catch (Exceptions.DuplicateLoginException e) {
                 out.println("Error:" + e.getMessage());
                 out.println("Try again.");
@@ -84,12 +83,30 @@ public class Game {
         return username;
     }
 
-    private static void checkValidUser(String username)
+    private static boolean checkValidUser(String username, PrintStream out)
             throws Exceptions.DuplicateLoginException {
-        // Replace with call to account microservice
-        boolean offline = true;
-        if (!offline) {
-            throw new Exceptions().new DuplicateLoginException(Constants.DUPLICATE_LOGIN);
+
+        try (Socket socket = new Socket("localhost", 8081)) {
+            DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+            String output = "login;" + username.trim();
+            dataOut.writeUTF(output);
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            int loginResult = in.readInt();
+            System.out.println("received result: "+ loginResult);
+            if (loginResult == 0) {
+                throw new Exceptions().new DuplicateLoginException(Constants.DUPLICATE_LOGIN);
+            } else {
+                if (loginResult == 1) {
+                    out.println("Logging in as: " + username);
+                } else {
+                    out.println("Creating new account: " + username);
+                    loadUserData(username);
+                    checkValidUser(username, out);
+                }
+                return true;
+            }
+        } catch (IOException e) {
+            return false;
         }
     }
 
@@ -123,6 +140,23 @@ public class Game {
         }
     }
 
+    private static void logoutUser(String username, PrintStream out) {
+        try (Socket socket = new Socket("localhost", 8081)) {
+            DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+            dataOut.writeUTF("logout;" + username.trim());
+            DataInputStream inLogout = new DataInputStream(socket.getInputStream());
+            int logoutResult = inLogout.readInt();
+            if (logoutResult == 0) {
+                out.println("Failed to log out user: " + username);
+            } else {
+                out.println("Logging out: " + username);
+            }
+        } catch (IOException e) {
+            out.println("Error: Could not communicate with user account server.");
+            e.printStackTrace();
+        }
+    }
+
     private static void serveUser(BufferedReader in, PrintStream out, UserData userData)
             throws IOException {
         String input;
@@ -133,6 +167,7 @@ public class Game {
                 input = in.readLine().trim();
                 try {
                     if (input.equals(Constants.EXIT_CODE)) {
+                        logoutUser(userData.getUsername(), out);
                         saveGame(userData);
                         break;
                     }
