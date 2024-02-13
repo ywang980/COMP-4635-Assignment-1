@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 import java.util.Date;
 import java.nio.file.*;
+import java.util.Locale;
 import java.util.Random;
 
 public class DatabaseServer {
@@ -117,9 +118,12 @@ public class DatabaseServer {
         for (String a : data) {
             if (a.trim().equalsIgnoreCase(word.trim())) {
                 System.out.println(a);
-                data.remove(a);
+                data.remove(word.toLowerCase());
+                break;
             }
         }
+        updateDataBase();
+
     }
 
     public String findWord(String word) {
@@ -141,6 +145,21 @@ public class DatabaseServer {
 
             System.out.println("word not in database");
             data.add(word);
+        }
+        updateDataBase();
+
+
+    }
+
+    public void updateDataBase() {
+        String filename = "./words.txt";
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filename, false))) {
+            for (String word : data) {
+                writer.println(word);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }
@@ -181,6 +200,12 @@ public class DatabaseServer {
 
     }
 
+    /**
+     * starts the program
+     * @param args
+     * @throws IOException
+     */
+
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             System.err.println(USAGE);
@@ -208,6 +233,11 @@ public class DatabaseServer {
         server.socket.close();
     }
 
+
+    /*
+    *
+    * Gets words from database
+    * */
     public static void getWords() throws IOException {
 
         try {
