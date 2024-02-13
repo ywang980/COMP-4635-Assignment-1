@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class Client {
     static final String MESSAGE_END_DELIM = "*End of Message*";
     static final String host = "localhost";
-    static final int port = 1000;
+    static final int port = 8080;
 
     public static void main(String[] args) {
         Socket clientSocket = null;

@@ -1,8 +1,9 @@
 package GameServer;
 
 import java.io.*;
+import java.util.Arrays;
 
-class GameState {
+public class GameState {
     private String state;
     private int attempts;
     private String[] words;
@@ -19,13 +20,19 @@ class GameState {
         this.puzzle = new Puzzle(this.words);
     }
 
-    public GameState(BufferedReader reader) throws IOException {
-        this.state = ParseInput.parseStringValue(reader);
+    public GameState(String data) {
+        String[] lines = data.trim().split("\n");
+        this.state = lines[0].split(";")[1];
         if (this.state.equals(Constants.PLAY_STATE)) {
-            this.attempts = ParseInput.parseIntValue(reader);
-            String wordsData = ParseInput.parseStringValue(reader);
+            this.attempts = Integer.parseInt(lines[1].split(";")[1]);
+            String wordsData = lines[2].split(";")[1];
             this.words = wordsData.split(",");
-            this.puzzle = new Puzzle(this.words[0], reader);
+
+            StringBuilder puzzleData = new StringBuilder();
+            for (int i = 3; i < lines.length; i++) {
+                puzzleData.append(lines[i]).append("\n");
+            }
+            this.puzzle = new Puzzle(this.words[0], puzzleData.toString());
         }
     }
 

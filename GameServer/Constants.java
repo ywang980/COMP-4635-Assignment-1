@@ -1,12 +1,12 @@
 package GameServer;
 
-class Constants {
+public class Constants {
         public static final String USER_DATA_DIRECTORY = "./UserData/";
 
         public static final int MAX_WORD_COUNT = 15;
         public static final String WORD_REPOSITORY_PATH = "./Data/words.txt";
 
-        public static final int port = 1000;
+        public static final int port = 8080;
         public static final String MESSAGE_END_DELIM = "\n*End of Message*";
         public static final String EXIT_CODE = "*Exit*";
         public static final String SAVE_CODE = "*Save*";
