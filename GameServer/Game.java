@@ -133,7 +133,7 @@ public class Game {
         private static boolean checkValidUser(String username, PrintStream out)
                 throws Exceptions.DuplicateLoginException {
 
-            try (Socket socket = new Socket("localhost", 8081)) {
+            try (Socket socket = new Socket("localhost", Constants.UAS_PORT)) {
                 BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 String output = "login;" + username.trim();
                 dataOut.write(output);
@@ -158,7 +158,7 @@ public class Game {
 
         private static UserData validateUserData(PrintStream out, String username) {
             UserData userData = null;
-            try (Socket socket = new Socket("localhost", 8081)) {
+            try (Socket socket = new Socket("localhost", Constants.UAS_PORT)) {
                 BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 String output = "load;" + username;
                 dataOut.write(output);
@@ -178,7 +178,7 @@ public class Game {
         }
 
         private static void logoutUser(String username, PrintStream out) {
-            try (Socket socket = new Socket("localhost", 8081)) {
+            try (Socket socket = new Socket("localhost", Constants.UAS_PORT)) {
                 BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 String output = "logout;" + username.trim();
                 dataOut.write(output);
@@ -457,7 +457,7 @@ public class Game {
 
     private static void saveGame(UserData userData) throws IOException {
 
-        try (Socket socket = new Socket("localhost", 8081)) {
+        try (Socket socket = new Socket("localhost", Constants.UAS_PORT)) {
             BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             String output = "save;" + userData.getUsername();
             dataOut.write(output + "\n" + userData.getUserDataString());
