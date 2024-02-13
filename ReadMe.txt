@@ -10,3 +10,6 @@ Second argument does not need to be 5599 needs to be the same port as the Databa
 Run the client.
 
 Ensure you are using case sensitive commands and following the provided templates.
+
+Once the game has started, you have lives equal to double the words, or 15. Whichever is lowest. Guesses are not
+case sensitive. Follow the instructions to save the game and exit.
