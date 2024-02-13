@@ -1,18 +1,24 @@
 package DatabaseServer;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 /**
 * Title: COMP4635 Task 2. Basic Socket Communication. Clients and Servers
 * Usage: java BasicUDPTimeServer [port]
 */
-
-import java.net.*;
-import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.nio.file.*;
 import java.util.Random;
 
 /**
- * Represents a database server that listens for incoming requests on a specified port.
+ * Represents a database server that listens for incoming requests on a
+ * specified port.
  */
 public class DatabaseServer {
     private static final String USAGE = "Usage: java DatabaseServer [port]";
@@ -22,8 +28,10 @@ public class DatabaseServer {
 
     /**
      * Constructs a DatabaseServer object that listens on the specified port.
+     * 
      * @param port - The port number to listen on.
-     * @throws IOException - If an I/O error occurs while creating the DatagramSocket.
+     * @throws IOException - If an I/O error occurs while creating the
+     *                     DatagramSocket.
      */
     public DatabaseServer(int port) throws IOException {
         socket = new DatagramSocket(port);
@@ -62,6 +70,7 @@ public class DatabaseServer {
 
     /**
      * Parses the incoming packet command and performs corresponding actions.
+     * 
      * @param command - The command received in the packet.
      * @return - The result of the command processing.
      */
@@ -84,8 +93,7 @@ public class DatabaseServer {
             case 'C':
                 if (findWord(word) != null) {
                     result = "1";
-                }
-                else {
+                } else {
                     result = "0";
                 }
                 break;
@@ -103,6 +111,7 @@ public class DatabaseServer {
 
     /**
      * Removes the specified word from the database.
+     * 
      * @param word - The word to be removed.
      */
     public void removeWord(String word) {
@@ -120,6 +129,7 @@ public class DatabaseServer {
 
     /**
      * Searches for the specified word in the database.
+     * 
      * @param word The word to search for.
      * @return The word if found in the database, otherwise null.
      */
@@ -136,6 +146,7 @@ public class DatabaseServer {
 
     /**
      * Adds the specified word to the database if it does not already exist.
+     * 
      * @param word The word to add to the database.
      */
     public void addWord(String word) {
@@ -154,21 +165,25 @@ public class DatabaseServer {
      * Updates the database by writing the current data to a file.
      */
     public void updateDataBase() {
-        String filename = "./words.txt";
+        String filename = "./DatabaseServer/words.txt";
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(filename, false))) {
             for (String word : data) {
-                writer.println(word);
+                writer.println(word.replaceAll("\\n", ""));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     /**
-     * Generates a random word from the database that contains the specified substring.
+     * Generates a random word from the database that contains the specified
+     * substring.
+     * 
      * @param a - The substring to match in the generated word.
-     * @return - A random word containing the specified substring, or an empty string if no such word is found.
+     * @return - A random word containing the specified substring, or an empty
+     *         string if no such word is found.
      */
     public String randomWord(String a) {
         String word = "";
@@ -187,8 +202,10 @@ public class DatabaseServer {
 
     /**
      * Generates a random word from the database with the specified length.
+     * 
      * @param a - The length of the word to generate.
-     * @return - A random word with the specified length, or an empty string if no such word is found.
+     * @return - A random word with the specified length, or an empty string if no
+     *         such word is found.
      */
     public String randomWordLength(String a) {
 
@@ -211,7 +228,9 @@ public class DatabaseServer {
 
     /**
      * Starts the program.
-     * @param args - The command line arguments. The first argument should be the port number.
+     * 
+     * @param args - The command line arguments. The first argument should be the
+     *             port number.
      * @throws IOException - If an I/O error occurs.
      */
     public static void main(String[] args) throws IOException {
@@ -239,7 +258,6 @@ public class DatabaseServer {
         server.serve();
         server.socket.close();
     }
-
 
     /**
      * Retrieves words from the database file.
