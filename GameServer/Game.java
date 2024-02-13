@@ -20,18 +20,38 @@ public class Game {
         }
     }
 
-    private static void runServer(ServerSocket serverSocket) {
-        while (true) {
-            try {
-                System.out.println("Listening for incoming requests...");
 
-                Socket clientSocket = serverSocket.accept();
-                handleClient(clientSocket);
-            } catch (IOException e) {
-                System.out.println("Error: could not communicate with client.");
-            }
+    
+    private static class newGameHandler implements Runnable {
+
+        private Socket clientSocket;
+
+
+        public  newGameHandler(Socket socket){
+
+            this.clientSocket=socket;
         }
-    }
+        public void run() {
+
+            while (true) {
+                try {
+                    System.out.println("Client Connected");
+                    handleClient(clientSocket);
+                } catch (SocketException e) {
+                    System.out.println(e.getMessage());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        clientSocket.close();
+                    } catch (IOException e) {
+                    }
+                    System.out.println("Closed a connection: ");
+                }
+            }
+
+        }
+
 
     private static void handleClient(Socket clientSocket) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -426,4 +446,10 @@ public class Game {
         } finally {
         }
     }
+
+
+
+
+
+}
 }
