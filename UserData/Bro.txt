@@ -1,3 +1,0 @@
-Username;Bro
-Score;0
-State;Idle
