@@ -27,7 +27,7 @@ public class Game {
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             wordSocket = new DatagramSocket();
-            wordSocket.setSoTimeout(2000);
+            wordSocket.setSoTimeout(10000);
             ExecutorService fixedThreadPool = Executors.newFixedThreadPool(20);
             System.out.println("Listening for incoming requests...");
 

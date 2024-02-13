@@ -14,15 +14,11 @@ import java.nio.file.*;
 import java.util.Random;
 
 public class DatabaseServer {
-    private static final String USAGE = "Usage: java BasicUDPTimeServer [port]";
+    private static final String USAGE = "Usage: java DatabaseServer [port]";
     protected DatagramSocket socket = null;
     protected BufferedReader in = null;
     private static ArrayList<String> data;
     private Random randomizer = new Random();
-
-    public DatabaseServer() throws IOException {
-        this(5599);
-    }
 
     public DatabaseServer(int port) throws IOException {
         socket = new DatagramSocket(port);
@@ -215,7 +211,7 @@ public class DatabaseServer {
     public static void getWords() throws IOException {
 
         try {
-            String rawString = new String(Files.readAllBytes(Paths.get("words.txt")));
+            String rawString = new String(Files.readAllBytes(Paths.get("./DatabaseServer/words.txt")));
             String[] words = rawString.split("\\s");
             data = new ArrayList<String>();
 
