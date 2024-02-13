@@ -169,7 +169,9 @@ public class DatabaseServer {
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(filename, false))) {
             for (String word : data) {
-                writer.println(word.replaceAll("\\n", ""));
+                if (!word.strip().isEmpty()) {
+                    writer.println(word.replace("\\n", ""));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

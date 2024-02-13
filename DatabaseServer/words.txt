@@ -2541,7 +2541,6 @@ biplane
 bipolar
 biracial
 birch
-bird
 birdbath
 birdie
 birdlike
