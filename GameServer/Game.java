@@ -117,15 +117,16 @@ public class Game {
         private static boolean checkValidUser(String username, PrintStream out)
                 throws Exceptions.DuplicateLoginException {
 
-            try (Socket socket = new Socket("localhost", Constants.UAS_PORT)) {
-                BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            try (Socket accountSocket = new Socket("localhost", Constants.UAS_PORT)) {
+                accountSocket.setSoTimeout(5000);
+                BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(accountSocket.getOutputStream()));
 
                 String output = "login;" + username.trim();
                 dataOut.write(output);
                 dataOut.newLine();
                 dataOut.flush();
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                BufferedReader in = new BufferedReader(new InputStreamReader(accountSocket.getInputStream()));
                 int loginResult = Integer.parseInt(in.readLine());
                 if (loginResult == 0) {
                     throw new Exceptions().new DuplicateLoginException(Constants.DUPLICATE_LOGIN);
@@ -137,6 +138,8 @@ public class Game {
                     }
                     return true;
                 }
+            } catch (SocketTimeoutException e) {
+                return false;
             } catch (IOException e) {
                 return false;
             }
@@ -145,13 +148,14 @@ public class Game {
         private static UserData validateUserData(PrintStream out, String username) {
             UserData userData = null;
             try (Socket accountSocket = new Socket("localhost", Constants.UAS_PORT)) {
+                accountSocket.setSoTimeout(5000);
                 BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(accountSocket.getOutputStream()));
 
                 String output = "load;" + username;
                 dataOut.write(output);
                 dataOut.newLine();
                 dataOut.flush();
-                
+
                 BufferedReader in = new BufferedReader(new InputStreamReader(accountSocket.getInputStream()));
                 StringBuilder userDataBuilder = new StringBuilder();
                 String line;
@@ -159,14 +163,17 @@ public class Game {
                     userDataBuilder.append(line).append("\n");
                 }
                 userData = new UserData(userDataBuilder.toString());
-            } catch (IOException e) {
-                out.println("Failed to communicate with UserAccount Server: " + e.getMessage());
+            }
+            catch (IOException e) {
+                out.println("Error: Could not communicate with user account server.");
+                e.printStackTrace();
             }
             return userData;
         }
 
         private static void logoutUser(String username, PrintStream out) {
             try (Socket accountSocket = new Socket("localhost", Constants.UAS_PORT)) {
+                accountSocket.setSoTimeout(5000);
                 BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(accountSocket.getOutputStream()));
 
                 String output = "logout;" + username.trim();
@@ -237,7 +244,7 @@ public class Game {
                 case "New Game": {
                     try {
                         int wordCount = Integer.parseInt(argument);
-                        if(wordCount < 2 ||wordCount > Constants.MAX_WORD_COUNT){
+                        if (wordCount < 2 || wordCount > Constants.MAX_WORD_COUNT) {
                             throw new IOException(Constants.WORD_COUNT_NOT_IN_RANGE);
                         }
 
@@ -443,11 +450,14 @@ public class Game {
         private static void saveGame(UserData userData) throws IOException {
 
             try (Socket accountSocket = new Socket("localhost", Constants.UAS_PORT)) {
+                accountSocket.setSoTimeout(5000);
                 BufferedWriter dataOut = new BufferedWriter(new OutputStreamWriter(accountSocket.getOutputStream()));
+
                 String output = "save;" + userData.getUsername();
                 dataOut.write(output + "\n" + userData.getUserDataString());
                 dataOut.newLine();
                 dataOut.flush();
+                
                 BufferedReader in = new BufferedReader(new InputStreamReader(accountSocket.getInputStream()));
                 int saveResult = Integer.parseInt(in.readLine());
                 if (saveResult == 0) {

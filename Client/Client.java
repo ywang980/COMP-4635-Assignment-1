@@ -13,6 +13,7 @@ public class Client {
         Socket clientSocket = null;
         try {
             clientSocket = new Socket(host, port);
+            clientSocket.setSoTimeout(5000);
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintStream out = new PrintStream(clientSocket.getOutputStream());
             System.out.println("Connected!");
