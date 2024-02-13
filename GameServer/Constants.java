@@ -1,12 +1,14 @@
 package GameServer;
 
 public class Constants {
+        public static final int BUFFER_LIMIT = 1000;
+        public static final String USAGE = "java Game [host] [Port] [wordPort]";
+
         public static final String USER_DATA_DIRECTORY = "./UserData/";
 
         public static final int MAX_WORD_COUNT = 15;
-        public static final String WORD_REPOSITORY_PATH = "./Data/words.txt";
 
-        public static final int port = 8080;
+        public static final int UAS_PORT = 8081;
         public static final String MESSAGE_END_DELIM = "\n*End of Message*";
         public static final String EXIT_CODE = "*Exit*";
         public static final String SAVE_CODE = "*Save*";
@@ -41,6 +43,7 @@ public class Constants {
         public static final String NON_INTEGER_VALUE = "Parsed value is not an integer.";
 
         public static final String INVALID_COMMAND_SYNTAX = "Invalid command syntax. Try again.";
+        public static final String WORD_COUNT_NOT_IN_RANGE = "Word count argument exceeds allowed range.";
         public static final String INVALID_WORD_COUNT = "Word count argument is not a number.";
         public static final String NO_EXISTING_GAME = "No existing game found.";
 }

@@ -1,7 +1,9 @@
-package DatabaseServer; /**
- * Title: COMP4635 Task 2. Basic Socket Communication. Clients and Servers
- * Usage: java BasicUDPTimeServer [port]
- */
+package DatabaseServer;
+
+/**
+* Title: COMP4635 Task 2. Basic Socket Communication. Clients and Servers
+* Usage: java BasicUDPTimeServer [port]
+*/
 
 import java.net.*;
 import java.io.*;
@@ -10,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.nio.file.*;
 import java.util.Random;
-
 
 public class DatabaseServer {
     private static final String USAGE = "Usage: java BasicUDPTimeServer [port]";
@@ -28,26 +29,24 @@ public class DatabaseServer {
     }
 
     public void serve() {
-        while(true) {
+        while (true) {
             try {
-                System.out.println("Listening for incoming requests ..." );
+                System.out.println("Listening for incoming requests ...");
                 byte[] inputbuf = new byte[1000];
                 byte[] outputbuf = new byte[1000];
-
 
                 DatagramPacket udpRequestPacket = new DatagramPacket(inputbuf, inputbuf.length);
                 socket.receive(udpRequestPacket);
 
-                String dataString = parsePacket(new String(udpRequestPacket.getData(), 0, udpRequestPacket.getLength()));
+                String dataString = parsePacket(
+                        new String(udpRequestPacket.getData(), 0, udpRequestPacket.getLength()));
                 outputbuf = dataString.getBytes();
 
                 System.out.println(dataString);
 
-
                 InetAddress address = udpRequestPacket.getAddress();
                 int port = udpRequestPacket.getPort();
-                DatagramPacket udpReplyPacket =
-                        new DatagramPacket(outputbuf, outputbuf.length, address, port);
+                DatagramPacket udpReplyPacket = new DatagramPacket(outputbuf, outputbuf.length, address, port);
                 socket.send(udpReplyPacket);
             } catch (SocketException e) {
                 System.out.println(e.getMessage());
@@ -57,29 +56,24 @@ public class DatabaseServer {
         }
     }
 
-    public String parsePacket(String command){
+    public String parsePacket(String command) {
         System.out.println(command);
-        String commandParts [] = command.split(";",2);
+        String commandParts[] = command.split(";", 2);
         char function = commandParts[0].toCharArray()[0];
         String word = commandParts[1];
-        String result ="";
+        String result = "";
 
-
-
-        //A;bird Add
-        //B;bird Remove
-        //C;bird Query
-        //D;d Find with letter
-        //E;10 Find with length
+        // A;bird Add
+        // B;bird Remove
+        // C;bird Query
+        // D;d Find with letter
+        // E;10 Find with length
 
         switch (function) {
             case 'A':
 
                 addWord(word);
                 result = "Word added to database";
-
-
-
 
                 break;
             case 'B':
@@ -88,33 +82,30 @@ public class DatabaseServer {
 
                 removeWord(word);
 
-
                 break;
             case 'C':
 
-                if (findWord(word)!=null){
+                if (findWord(word) != null) {
 
-                    result ="1";
+                    result = "1";
                 }
 
-                else{
-                    result ="0";
+                else {
+                    result = "0";
                 }
 
                 break;
             case 'D':
 
-                result =randomWord(word);
+                result = randomWord(word);
 
                 break;
 
             case 'E':
 
-                result =randomWordLength(word);
+                result = randomWordLength(word);
 
                 break;
-
-
 
             default:
 
@@ -124,10 +115,10 @@ public class DatabaseServer {
 
     }
 
-    public void removeWord(String word){
+    public void removeWord(String word) {
         System.out.println(word);
 
-        for (String a :data) {
+        for (String a : data) {
             if (a.trim().equalsIgnoreCase(word.trim())) {
                 System.out.println(a);
                 data.remove(a);
@@ -135,9 +126,9 @@ public class DatabaseServer {
         }
     }
 
-    public String findWord(String word){
+    public String findWord(String word) {
 
-        for (String a :data) {
+        for (String a : data) {
             if (a.trim().equalsIgnoreCase(word.trim())) {
                 System.out.println(a);
                 return a;
@@ -146,58 +137,53 @@ public class DatabaseServer {
         return null;
     }
 
-    public void addWord(String word){
+    public void addWord(String word) {
 
         System.out.println(word);
 
-        if(findWord(word)==null){
+        if (findWord(word) == null) {
 
             System.out.println("word not in database");
-            data.add(word);}
+            data.add(word);
+        }
 
     }
 
-    public String randomWord(String a){
-        String word ="";
+    public String randomWord(String a) {
+        String word = "";
 
         ArrayList<String> filteredwords = data
                 .stream()
                 .filter(c -> c.contains(a))
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
-        if(!filteredwords.isEmpty()){
+        if (!filteredwords.isEmpty()) {
 
-            word = filteredwords.get(randomizer.nextInt(filteredwords.size()));}
+            word = filteredwords.get(randomizer.nextInt(filteredwords.size()));
+        }
 
         return word;
     }
 
-    public String randomWordLength(String a){
+    public String randomWordLength(String a) {
 
-        String word ="";
+        String word = "";
 
         int length = Integer.parseInt(a);
 
         ArrayList<String> filteredwords = data
                 .stream()
-                .filter(c -> c.length()==length)
+                .filter(c -> c.length() == length)
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
-        if(!filteredwords.isEmpty()){
+        if (!filteredwords.isEmpty()) {
 
-            word = filteredwords.get(randomizer.nextInt(filteredwords.size()));}
+            word = filteredwords.get(randomizer.nextInt(filteredwords.size()));
+        }
 
         return word;
 
-
     }
-
-
-
-
-
-
-
 
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
@@ -208,9 +194,6 @@ public class DatabaseServer {
         int port = 0;
         DatabaseServer server = null;
         try {
-
-
-
 
             port = Integer.parseInt(args[0]);
             server = new DatabaseServer(port);
@@ -229,28 +212,24 @@ public class DatabaseServer {
         server.socket.close();
     }
 
+    public static void getWords() throws IOException {
 
-    public static void getWords() throws IOException{
-
-        try{
+        try {
             String rawString = new String(Files.readAllBytes(Paths.get("words.txt")));
-            String [] words = rawString.split("\\s");
+            String[] words = rawString.split("\\s");
             data = new ArrayList<String>();
 
-            for(String a:words){
+            for (String a : words) {
 
                 data.add(a);
             }
             System.out.println(data.size());
         }
 
-
-        catch(IOException e){
+        catch (IOException e) {
 
             System.out.println("not found");
 
-
         }
-
     };
 }
