@@ -2541,6 +2541,7 @@ biplane
 bipolar
 biracial
 birch
+bird
 birdbath
 birdie
 birdlike
@@ -15675,6 +15676,7 @@ Nietzsche
 Niger
 Nigeria
 niggardly
+nigger
 niggle
 nigh
 night
