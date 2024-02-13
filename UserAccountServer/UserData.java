@@ -10,6 +10,7 @@ public class UserData {
     private GameState gameState;
 
     public UserData(String data) throws IOException {
+
         int usernameStartIndex = data.indexOf("Username;") + "Username;".length();
         int usernameEndIndex = data.indexOf("\n", usernameStartIndex);
         this.username = data.substring(usernameStartIndex, usernameEndIndex);
@@ -18,8 +19,10 @@ public class UserData {
         int scoreEndIndex = data.indexOf("\n", scoreStartIndex);
         this.score = Integer.parseInt(data.substring(scoreStartIndex, scoreEndIndex));
 
+        int gameStateIndex = data.indexOf("\n", data.indexOf("\n", scoreEndIndex));
+
         if (data.contains("State;Play")) {
-            this.gameState = new GameState(data);
+            this.gameState = new GameState(data.substring(gameStateIndex));
         } else {
             this.gameState = new GameState();
         }
@@ -30,13 +33,6 @@ public class UserData {
         this.score = 0;
         this.gameState = new GameState();
     }
-
-     /**
-    public UserData(String username, int score, String data) throws IOException {
-        this.username = username;
-        this.score = score;
-        this.gameState = new GameState(data);
-    }*/
 
     public String getUsername() {
         return this.username;

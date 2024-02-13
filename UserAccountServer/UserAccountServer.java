@@ -94,6 +94,20 @@ public class UserAccountServer {
         }
     }
 
+    private static synchronized int save(String username, String data) {
+        System.out.println("do we get here 1");
+        File userDataFile = new File(Constants.USER_DATA_DIRECTORY +
+                username + ".txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(userDataFile))) {
+            writer.write(data);
+            System.out.println("do we get here");
+            return 1;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     private static void handleConnection(Socket socket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
@@ -105,11 +119,20 @@ public class UserAccountServer {
             String[] parts = input.split(";");
             if (parts.length == 2) {
                 String operation = parts[0].trim();
-                String argument = parts[1].trim();
+                String username = parts[1].trim();
                 switch (operation) {
-                    case "login" -> result = login(argument);
-                    case "logout" -> result = logout(argument);
-                    case "load" -> stringResult = load(argument);
+                    case "login" -> result = login(username);
+                    case "logout" -> result = logout(username);
+                    case "load" -> stringResult = load(username);
+                    case "save" -> {
+                        StringBuilder dataBuilder = new StringBuilder();
+                        String line;
+                        while ((line = in.readLine()) != null && !line.isEmpty()) {
+                            dataBuilder.append(line).append("\n");
+                        }
+                        System.out.println("Received line: testing");
+                        result = save(username, dataBuilder.toString());
+                    }
                 }
                 if (result != -1) {
                     out.write(String.valueOf(result));
@@ -145,7 +168,6 @@ public class UserAccountServer {
             while (true) {
                 Socket socket = serverSocket.accept();
                 System.out.println("Connection established with game server.");
-                handleConnection(socket);
                 threadPool.submit(() -> handleConnection(socket));
             }
         } catch (IOException e) {

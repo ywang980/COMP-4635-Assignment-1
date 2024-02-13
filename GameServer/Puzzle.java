@@ -31,16 +31,20 @@ class Puzzle {
         initializePuzzleGrid();
     }
 
-    public Puzzle(String stem, BufferedReader reader) throws IOException {
+    public Puzzle(String stem, String puzzleData) {
         this.stem = stem;
 
-        String gridString = ParseInput.parsePuzzle(reader, true);
+        String[] gridStrings = puzzleData.split("\\$");
+
+        String gridString = gridStrings[0].trim();
         this.rows = gridString.split("\n").length;
         this.columns = gridString.indexOf('\n') - 1;
         this.puzzleGrid = convertStringToGrid(gridString, this.rows, this.columns);
 
-        gridString = ParseInput.parsePuzzle(reader, false);
-        this.solutionGrid = convertStringToGrid(gridString, rows, columns);
+        if (gridStrings.length > 1) {
+            String solutionString = gridStrings[1].trim();
+            this.solutionGrid = convertStringToGrid(solutionString, this.rows, this.columns);
+        }
     }
 
     private int findLongestLeafLength(String[] words) {
