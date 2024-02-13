@@ -15,6 +15,23 @@ public class Game {
     private static DatagramSocket wordSocket;
     private static int wordServerPort;
 
+    /*
+     * The "central" server is connected to the other components of
+     * the system as follows:
+     * 
+     * 1. Game Client - dedicated TCP connection.
+     * 2. Account Microservice - dedicated TCP connection/request (i.e.,
+     * load/save client data, validate client login, etc.).
+     * 3. Word Database Microservice - single UDP port.
+     * 
+     * Timeout values are:
+     * -10s for the word database microservice
+     * -5s for the account microservice
+     * -Upon timeout, the client connection is kept active, and a new menu
+     * is sent
+     * 
+     * A thead pool of size 20 is used to service each incoming request.
+     */
     public static void main(String[] args) {
 
         if (args.length != 3) {
@@ -59,6 +76,15 @@ public class Game {
             }
         }
 
+        /*
+         * First the client's username is authenticated. Upon successful
+         * authentication (i.e., no communication error with the account microservice
+         * nor duplicate login), the client data is loaded. If that is also
+         * succesful, the client may proceed to the game.
+         * 
+         * Exceptions caught at this level pertain to issues directly
+         * related to the connection between the client and the game server.
+         */
         private static void handleClient(Socket clientSocket) throws IOException {
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintStream out = new PrintStream(clientSocket.getOutputStream());
@@ -82,6 +108,14 @@ public class Game {
             }
         }
 
+        /*
+         * Repeatedly prompt the client for their username until
+         * a valid username (i.e., for a user that isn't already online)
+         * is provided.
+         * 
+         * Note: if the account microservice is offline, any username
+         * provided by the client will be flagged as invalid.
+         */
         private static String validateUsername(Socket clientSocket,
                 BufferedReader in, PrintStream out)
                 throws IOException {
@@ -101,6 +135,10 @@ public class Game {
             return username;
         }
 
+        /*
+         * Prompt the client for a non-empty string as their
+         * user name.
+         */
         private static String promptUserName(Socket clientSocket,
                 BufferedReader in, PrintStream out) throws IOException {
 
@@ -114,6 +152,13 @@ public class Game {
             return username;
         }
 
+        /*
+         * Open a new TCP connection to check if the client's
+         * provided user name is valid.
+         * Case 0: invalid user - already logged in
+         * Case 1: existing user
+         * Case 2: new user - automatically created/registered
+         */
         private static boolean checkValidUser(String username, PrintStream out)
                 throws Exceptions.DuplicateLoginException {
 
@@ -145,6 +190,15 @@ public class Game {
             }
         }
 
+        /*
+         * Open a new TCP connection to fetch the username's
+         * associated data as a string, attempting to
+         * construct a UserData object from it.
+         * 
+         * Exception handling: if the account microservice cannot be reached,
+         * will return user to menu prompting for their username, and print a
+         * corresponding error message.
+         */
         private static UserData validateUserData(PrintStream out, String username) {
             UserData userData = null;
             try (Socket accountSocket = new Socket("localhost", Constants.UAS_PORT)) {
@@ -163,14 +217,20 @@ public class Game {
                     userDataBuilder.append(line).append("\n");
                 }
                 userData = new UserData(userDataBuilder.toString());
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 out.println("Error: Could not communicate with user account server.");
                 e.printStackTrace();
             }
             return userData;
         }
 
+        /*
+         * Open a new TCP connection to save the username's
+         * associated data as a string.
+         * Exception handling: if the account microservice cannot be reached,
+         * will return user to menu prompting for their username, and print a
+         * corresponding error message.
+         */
         private static void logoutUser(String username, PrintStream out) {
             try (Socket accountSocket = new Socket("localhost", Constants.UAS_PORT)) {
                 accountSocket.setSoTimeout(5000);
@@ -194,11 +254,26 @@ public class Game {
             }
         }
 
+        /*
+         * Upon successful login/data load, the user will be given 2 menus through
+         * which they may interact with the game.
+         * 
+         * Menu 1: the User Menu - the user may start a new game, continue their
+         * existing game,
+         * or add/remove words from the database. To exit the connection, the user
+         * should enter
+         * *Exit*.
+         * 
+         * Menu 2: the Game Menu - opened whenever the user plays a game. Here, the user
+         * may guess a word, a letter, or query a word to see if it exists within the
+         * database. To return to the User Menu, the user should enter *Save*.
+         */
         private static void serveUser(BufferedReader in, PrintStream out, UserData userData)
                 throws IOException {
             String input;
 
             try {
+                // Sentinel loop for the user menu
                 do {
                     out.println(Constants.USER_MENU + Constants.MESSAGE_END_DELIM);
                     input = in.readLine().trim();
@@ -213,8 +288,10 @@ public class Game {
 
                         processUserInput(in, out, userData, input, existingGame);
                     } catch (SocketTimeoutException e) {
+                        // Handle timeout exception if word microservice cannnot be reached
                         handleError(out, userData, e);
                     } catch (IOException e) {
+                        // Handle IO exception if user input is invalid
                         handleError(out, userData, e);
                     }
                 } while (true);
@@ -223,8 +300,18 @@ public class Game {
             }
         }
 
+        /*
+         * Processes user input commands for interacting with the game. Parses the input
+         * string,
+         * determines the command, and executes corresponding actions.
+         * 
+         * Details: user input is tokenized in the format command;argument. For starting
+         * a new game, the argument must be a intenger from 2-15, inclusive.
+         */
         private static void processUserInput(BufferedReader in, PrintStream out,
                 UserData userData, String input, boolean existingGame) throws IOException {
+
+            // Tokenize user input
             String[] tokenizedInput = input.split(";");
             if (tokenizedInput.length <= 1)
                 throw new IOException(Constants.INVALID_COMMAND_SYNTAX);
@@ -232,6 +319,7 @@ public class Game {
             String command = tokenizedInput[0];
             String argument = tokenizedInput[1];
 
+            // Handle various commands
             switch (command) {
                 case "Add": {
                     System.out.println(contactDatabase('A', argument));
@@ -268,6 +356,9 @@ public class Game {
             }
         }
 
+        /*
+         * Send a request to the word database in the command;argument format.
+         */
         private static String contactDatabase(char command, String payload) {
             try {
                 String request = String.valueOf(command) + ";" + payload;
@@ -276,12 +367,10 @@ public class Game {
 
                 InetAddress address = InetAddress.getByName("localhost");
                 DatagramPacket packet = new DatagramPacket(requestBuf, requestBuf.length, address, wordServerPort);
-                // Set timeout: value
                 wordSocket.send(packet);
 
                 byte[] responseBuf = new byte[Constants.BUFFER_LIMIT];
                 packet = new DatagramPacket(responseBuf, responseBuf.length);
-                // Set timeout: 0
                 wordSocket.receive(packet);
 
                 String word = new String(packet.getData(), 0, packet.getLength());
@@ -296,6 +385,10 @@ public class Game {
             }
         }
 
+        /*
+         * Generate a new game by requesting a 'stem' word and a list of 'leaf' words
+         * from the word database microservice.
+         */
         private static void createNewGame(UserData userData, int wordCount) throws IOException {
             String words[] = generateWordList(wordCount);
             int attempts = Math.min(words.length * 2, 15);
@@ -358,6 +451,12 @@ public class Game {
             return true;
         }
 
+        /*
+         * Process the Game Menu. Incremented score upon a successful puzzle completion.
+         * The user may guess either a character or a word (i.e. any string with 2 or
+         * more characters). The user may also query a word to see if it exists in the
+         * database by prefixing it with a '?'
+         */
         private static void playGame(BufferedReader in, PrintStream out, UserData userData)
                 throws IOException {
             GameState gameState = userData.getGameState();
@@ -382,6 +481,10 @@ public class Game {
             saveGame(userData);
         }
 
+        /*
+         * Validate and process user game input until user enters the *Save*
+         * command.
+         */
         private static String getValidInput(BufferedReader in, PrintStream out, GameState gameState)
                 throws IOException {
             String input = "";
@@ -400,10 +503,12 @@ public class Game {
 
         private static int processGameInput(BufferedReader in, PrintStream out,
                 GameState gameState, String input) {
+            //Save command
             if (input.equals(Constants.SAVE_CODE)) {
                 return 1;
             }
 
+            //Query case
             else if (input.toCharArray()[0] == '?') {
                 if (processWordQuery(in, out, gameState, input.substring(1))) {
                     out.println("This word is in the database");
@@ -457,7 +562,7 @@ public class Game {
                 dataOut.write(output + "\n" + userData.getUserDataString());
                 dataOut.newLine();
                 dataOut.flush();
-                
+
                 BufferedReader in = new BufferedReader(new InputStreamReader(accountSocket.getInputStream()));
                 int saveResult = Integer.parseInt(in.readLine());
                 if (saveResult == 0) {
