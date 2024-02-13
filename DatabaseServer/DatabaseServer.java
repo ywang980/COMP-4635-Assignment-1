@@ -8,23 +8,30 @@ package DatabaseServer;
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
-
-import java.util.Date;
 import java.nio.file.*;
-import java.util.Locale;
 import java.util.Random;
 
+/**
+ * Represents a database server that listens for incoming requests on a specified port.
+ */
 public class DatabaseServer {
     private static final String USAGE = "Usage: java DatabaseServer [port]";
     protected DatagramSocket socket = null;
-    protected BufferedReader in = null;
     private static ArrayList<String> data;
     private Random randomizer = new Random();
 
+    /**
+     * Constructs a DatabaseServer object that listens on the specified port.
+     * @param port - The port number to listen on.
+     * @throws IOException - If an I/O error occurs while creating the DatagramSocket.
+     */
     public DatabaseServer(int port) throws IOException {
         socket = new DatagramSocket(port);
     }
 
+    /**
+     * Listens for incoming requests and serves them indefinitely.
+     */
     public void serve() {
         while (true) {
             try {
@@ -53,6 +60,11 @@ public class DatabaseServer {
         }
     }
 
+    /**
+     * Parses the incoming packet command and performs corresponding actions.
+     * @param command - The command received in the packet.
+     * @return - The result of the command processing.
+     */
     public String parsePacket(String command) {
         System.out.println(command);
         String commandParts[] = command.split(";", 2);
@@ -60,58 +72,39 @@ public class DatabaseServer {
         String word = commandParts[1];
         String result = "";
 
-        // A;bird Add
-        // B;bird Remove
-        // C;bird Query
-        // D;d Find with letter
-        // E;10 Find with length
-
         switch (function) {
             case 'A':
-
                 addWord(word);
                 result = "Word added to database";
-
                 break;
             case 'B':
-
                 result = "Word removed from database";
-
                 removeWord(word);
-
                 break;
             case 'C':
-
                 if (findWord(word) != null) {
-
                     result = "1";
                 }
-
                 else {
                     result = "0";
                 }
-
                 break;
             case 'D':
-
                 result = randomWord(word);
-
                 break;
-
             case 'E':
-
                 result = randomWordLength(word);
-
                 break;
-
             default:
-
                 result = "error detected";
         }
         return result;
-
     }
 
+    /**
+     * Removes the specified word from the database.
+     * @param word - The word to be removed.
+     */
     public void removeWord(String word) {
         System.out.println(word);
 
@@ -123,9 +116,13 @@ public class DatabaseServer {
             }
         }
         updateDataBase();
-
     }
 
+    /**
+     * Searches for the specified word in the database.
+     * @param word The word to search for.
+     * @return The word if found in the database, otherwise null.
+     */
     public String findWord(String word) {
 
         for (String a : data) {
@@ -137,6 +134,10 @@ public class DatabaseServer {
         return null;
     }
 
+    /**
+     * Adds the specified word to the database if it does not already exist.
+     * @param word The word to add to the database.
+     */
     public void addWord(String word) {
 
         System.out.println(word);
@@ -147,10 +148,11 @@ public class DatabaseServer {
             data.add(word);
         }
         updateDataBase();
-
-
     }
 
+    /**
+     * Updates the database by writing the current data to a file.
+     */
     public void updateDataBase() {
         String filename = "./words.txt";
 
@@ -161,9 +163,13 @@ public class DatabaseServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
+    /**
+     * Generates a random word from the database that contains the specified substring.
+     * @param a - The substring to match in the generated word.
+     * @return - A random word containing the specified substring, or an empty string if no such word is found.
+     */
     public String randomWord(String a) {
         String word = "";
 
@@ -176,10 +182,14 @@ public class DatabaseServer {
 
             word = filteredwords.get(randomizer.nextInt(filteredwords.size()));
         }
-
         return word;
     }
 
+    /**
+     * Generates a random word from the database with the specified length.
+     * @param a - The length of the word to generate.
+     * @return - A random word with the specified length, or an empty string if no such word is found.
+     */
     public String randomWordLength(String a) {
 
         String word = "";
@@ -197,15 +207,13 @@ public class DatabaseServer {
         }
 
         return word;
-
     }
 
     /**
-     * starts the program
-     * @param args
-     * @throws IOException
+     * Starts the program.
+     * @param args - The command line arguments. The first argument should be the port number.
+     * @throws IOException - If an I/O error occurs.
      */
-
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             System.err.println(USAGE);
@@ -215,7 +223,6 @@ public class DatabaseServer {
         int port = 0;
         DatabaseServer server = null;
         try {
-
             port = Integer.parseInt(args[0]);
             server = new DatabaseServer(port);
         } catch (NumberFormatException e) {
@@ -234,12 +241,10 @@ public class DatabaseServer {
     }
 
 
-    /*
-    *
-    * Gets words from database
-    * */
-    public static void getWords() throws IOException {
-
+    /**
+     * Retrieves words from the database file.
+     */
+    public static void getWords() {
         try {
             String rawString = new String(Files.readAllBytes(Paths.get("./DatabaseServer/words.txt")));
             String[] words = rawString.split("\\s");
@@ -250,12 +255,9 @@ public class DatabaseServer {
                 data.add(a);
             }
             System.out.println(data.size());
-        }
 
-        catch (IOException e) {
-
+        } catch (IOException e) {
             System.out.println("not found");
-
         }
-    };
+    }
 }
