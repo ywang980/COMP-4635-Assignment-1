@@ -1,7 +1,6 @@
 package UserAccountServer;
 
 import GameServer.GameState;
-import java.io.*;
 
 /**
  * Represents user data, including username, score, and the game state object.
@@ -13,6 +12,7 @@ public class UserData {
 
     /**
      * Constructs UserData object from a string containing user data.
+     * 
      * @param data - The string containing user data.
      */
     public UserData(String data) {
@@ -36,8 +36,10 @@ public class UserData {
 
     /**
      * Constructs a new USerData object with default values.
-     * @param username - The username for the new UserData object.
-     * @param defaultAccount - not used, exists to indicate that this is the default, empty UserData constructor.
+     * 
+     * @param username       - The username for the new UserData object.
+     * @param defaultAccount - not used, exists to indicate that this is the
+     *                       default, empty UserData constructor.
      */
     public UserData(String username, boolean defaultAccount) {
         this.username = username;
@@ -47,10 +49,20 @@ public class UserData {
 
     /**
      * Gets the username associated with this user data
+     * 
      * @return - The username.
      */
     public String getUsername() {
         return this.username;
+    }
+
+    /**
+     * Gets the score associated with this user data
+     * 
+     * @return - The score.
+     */
+    public int getScore() {
+        return this.score;
     }
 
     /**
@@ -62,6 +74,7 @@ public class UserData {
 
     /**
      * Gets the game state associated with this user data.
+     * 
      * @return - The game state.
      */
     public GameState getGameState() {
@@ -70,6 +83,7 @@ public class UserData {
 
     /**
      * Sets the game state associated with this user data.
+     * 
      * @param gameState - The game state to set.
      */
     public void setGameState(GameState gameState) {
@@ -78,6 +92,7 @@ public class UserData {
 
     /**
      * Gets a string representation of the user data.
+     * 
      * @return - A string containing the user data.
      */
     public String getUserDataString() {

@@ -1,19 +1,11 @@
 package DatabaseServer;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-/**
-* Title: COMP4635 Task 2. Basic Socket Communication. Clients and Servers
-* Usage: java BasicUDPTimeServer [port]
-*/
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.net.*;
+import java.io.*;
+import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
 
 /**
@@ -22,6 +14,7 @@ import java.util.Random;
  */
 public class DatabaseServer {
     private static final String USAGE = "Usage: java DatabaseServer [port]";
+    private static final String WORD_FILE_PATH = "./DatabaseServer/words.txt";
     protected DatagramSocket socket = null;
     private static ArrayList<String> data;
     private Random randomizer = new Random();
@@ -38,12 +31,72 @@ public class DatabaseServer {
     }
 
     /**
+     * Starts the program.
+     * 
+     * @param args - The command line arguments. The first argument should be the
+     *             port number.
+     * @throws IOException - If an I/O error occurs.
+     */
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.err.println(USAGE);
+            System.exit(1);
+        }
+
+        int port = 0;
+        DatabaseServer server = null;
+        try {
+            port = Integer.parseInt(args[0]);
+            server = new DatabaseServer(port);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid port number: " + port + ".");
+            System.exit(1);
+        } catch (IOException e) {
+            System.out.println("Exception caught when trying to listen on port "
+                    + port);
+            System.out.println(e.getMessage());
+        }
+
+        getWords();
+
+        server.serve();
+        server.socket.close();
+    }
+
+    /**
+     * Retrieves words from the database file.
+     */
+    public static void getWords() {
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(WORD_FILE_PATH))) {
+
+            data = new ArrayList<String>();
+            String line = reader.readLine();
+
+            while (line != null) {
+                data.add(line.trim());
+                line = reader.readLine();
+            }
+            // String rawString = new String(Files.readAllBytes(Paths.get(WORD_FILE_PATH)));
+            // String[] words = rawString.split("\\s");
+            // data = new ArrayList<String>();
+
+            // for (String a : words) {
+            // data.add(a);
+            // }
+            System.out.println("Words in database: " + data.size());
+
+        } catch (IOException e) {
+            // System.out.println("not found");
+        }
+    }
+
+    /**
      * Listens for incoming requests and serves them indefinitely.
      */
     public void serve() {
+        System.out.println("Listening for incoming requests ...");
         while (true) {
             try {
-                System.out.println("Listening for incoming requests ...");
                 byte[] inputbuf = new byte[1000];
                 byte[] outputbuf = new byte[1000];
 
@@ -53,8 +106,7 @@ public class DatabaseServer {
                 String dataString = parsePacket(
                         new String(udpRequestPacket.getData(), 0, udpRequestPacket.getLength()));
                 outputbuf = dataString.getBytes();
-
-                System.out.println(dataString);
+                System.out.println("Sending to game server: " + dataString);
 
                 InetAddress address = udpRequestPacket.getAddress();
                 int port = udpRequestPacket.getPort();
@@ -75,38 +127,56 @@ public class DatabaseServer {
      * @return - The result of the command processing.
      */
     public String parsePacket(String command) {
-        System.out.println(command);
+        System.out.println("\nIncoming command: " + command);
         String commandParts[] = command.split(";", 2);
         char function = commandParts[0].toCharArray()[0];
         String word = commandParts[1];
-        String result = "";
 
         switch (function) {
             case 'A':
-                addWord(word);
-                result = "Word added to database";
-                break;
+                return addWord(word);
             case 'B':
-                result = "Word removed from database";
-                removeWord(word);
-                break;
+                return removeWord(word);
             case 'C':
-                if (findWord(word) != null) {
-                    result = "1";
-                } else {
-                    result = "0";
-                }
-                break;
+                return findWord(word);
             case 'D':
-                result = randomWord(word);
-                break;
+                return randomWord(word);
             case 'E':
-                result = randomWordLength(word);
-                break;
+                return randomWordLength(word);
             default:
-                result = "error detected";
+                return "error detected";
         }
-        return result;
+    }
+
+    /**
+     * Adds the specified word to the database if it does not already exist.
+     * 
+     * @param word The word to add to the database.
+     */
+    public String addWord(String word) {
+        if (findWord(word) == "0") {
+            data.add(word);
+            updateDataBase();
+            return "Successfully added word: '" + word + "' to the database.";
+        } else {
+            return "Unsuccessful add; word: '" + word + "' already exists in database.";
+        }
+    }
+
+    /**
+     * Updates the database by writing the current data to a file.
+     */
+    public void updateDataBase() {
+        String filename = WORD_FILE_PATH;
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filename, false))) {
+            Collections.sort(data, (a, b) -> a.compareToIgnoreCase(b));
+            for (String word : data) {
+                writer.println(word);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -114,17 +184,16 @@ public class DatabaseServer {
      * 
      * @param word - The word to be removed.
      */
-    public void removeWord(String word) {
-        System.out.println(word);
-
+    public String removeWord(String word) {
         for (String a : data) {
             if (a.trim().equalsIgnoreCase(word.trim())) {
-                System.out.println(a);
                 data.remove(word.toLowerCase());
-                break;
+                updateDataBase();
+                return "Successfully removed word: '" + word + "' from the database.";
             }
         }
-        updateDataBase();
+
+        return "Unsuccessful remove; word: '" + word + "' not found in database.";
     }
 
     /**
@@ -137,46 +206,10 @@ public class DatabaseServer {
 
         for (String a : data) {
             if (a.trim().equalsIgnoreCase(word.trim())) {
-                System.out.println(a);
-                return a;
+                return "1";
             }
         }
-        return null;
-    }
-
-    /**
-     * Adds the specified word to the database if it does not already exist.
-     * 
-     * @param word The word to add to the database.
-     */
-    public void addWord(String word) {
-
-        System.out.println(word);
-
-        if (findWord(word) == null) {
-
-            System.out.println("word not in database");
-            data.add(word);
-        }
-        updateDataBase();
-    }
-
-    /**
-     * Updates the database by writing the current data to a file.
-     */
-    public void updateDataBase() {
-        String filename = "./DatabaseServer/words.txt";
-
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filename, false))) {
-            for (String word : data) {
-                if (!word.strip().isEmpty()) {
-                    writer.println(word.replace("\\n", ""));
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        return "0";
     }
 
     /**
@@ -217,7 +250,7 @@ public class DatabaseServer {
 
         ArrayList<String> filteredwords = data
                 .stream()
-                .filter(c -> c.length() == length)
+                .filter(c -> c.length() >= length && c.length() >= 2)
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
         if (!filteredwords.isEmpty()) {
@@ -226,58 +259,5 @@ public class DatabaseServer {
         }
 
         return word;
-    }
-
-    /**
-     * Starts the program.
-     * 
-     * @param args - The command line arguments. The first argument should be the
-     *             port number.
-     * @throws IOException - If an I/O error occurs.
-     */
-    public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.err.println(USAGE);
-            System.exit(1);
-        }
-
-        int port = 0;
-        DatabaseServer server = null;
-        try {
-            port = Integer.parseInt(args[0]);
-            server = new DatabaseServer(port);
-        } catch (NumberFormatException e) {
-            System.err.println("Invalid port number: " + port + ".");
-            System.exit(1);
-        } catch (IOException e) {
-            System.out.println("Exception caught when trying to listen on port "
-                    + port);
-            System.out.println(e.getMessage());
-        }
-
-        getWords();
-
-        server.serve();
-        server.socket.close();
-    }
-
-    /**
-     * Retrieves words from the database file.
-     */
-    public static void getWords() {
-        try {
-            String rawString = new String(Files.readAllBytes(Paths.get("./DatabaseServer/words.txt")));
-            String[] words = rawString.split("\\s");
-            data = new ArrayList<String>();
-
-            for (String a : words) {
-
-                data.add(a);
-            }
-            System.out.println(data.size());
-
-        } catch (IOException e) {
-            System.out.println("not found");
-        }
     }
 }

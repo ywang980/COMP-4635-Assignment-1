@@ -1,3 +1,0 @@
-Username;yugi
-Score;0
-State;Idle

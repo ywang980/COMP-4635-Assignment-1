@@ -1,8 +1,0 @@
-Username;Raph
-Score;0
-State;Play
-Attempts;4
-Words;v, severe
-....------..+
-$
-....severe..+

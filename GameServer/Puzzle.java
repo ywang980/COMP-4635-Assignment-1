@@ -25,12 +25,19 @@ class Puzzle {
 
     /**
      * Constructs a Puzzle object with the given words.
+     * 
      * @param words - An array of words used to create the puzzle.
      */
     public Puzzle(String[] words) {
-        this.stem = words[0];
+        this.stem = words[0].toLowerCase();
         this.rows = stem.length();
-        this.columns = this.findLongestLeafLength(words) * 2 + 1;
+
+        int longestLeafLength = this.findLongestLeafLength(words);
+        this.columns = longestLeafLength * 2 + 1;
+        if(longestLeafLength % 2 == 0){
+            this.columns++;
+        }
+
         this.puzzleGrid = createDefaultGrid();
         this.solutionGrid = createDefaultGrid();
         populateSolutionGrid(words);
@@ -39,7 +46,8 @@ class Puzzle {
 
     /**
      * Constructs a Puzzle object with the given stem and puzzle data.
-     * @param stem - The stem of the puzzle.
+     * 
+     * @param stem       - The stem of the puzzle.
      * @param puzzleData - The puzzle data containing the grid strings.
      */
     public Puzzle(String stem, String puzzleData) {
@@ -60,6 +68,7 @@ class Puzzle {
 
     /**
      * Finds the length of the longest word (leaf) in the given array of words.
+     * 
      * @param words - An array of words.
      * @return - The length of the longest word in the array.
      */
@@ -71,9 +80,10 @@ class Puzzle {
         return length;
     }
 
-
     /**
-     * Initializes a grid where each row contains a series of '*' terminated with a '+'.
+     * Initializes a grid where each row contains a series of '*' terminated with a
+     * '+'.
+     * 
      * @return - The initialized grid.
      */
     private char[][] createDefaultGrid() {
@@ -91,6 +101,7 @@ class Puzzle {
 
     /**
      * Populates the solution grid using an array of words.
+     * 
      * @param words - An array of words.
      */
     private void populateSolutionGrid(String[] words) {
@@ -101,7 +112,7 @@ class Puzzle {
 
         // Insert stem
         char[] stemArray = words[0].toCharArray();
-        int stemColumn = (this.columns - 1) / 2;
+        int stemColumn = (this.columns - 2) / 2;
         for (int i = 0; i < stemArray.length; i++) {
             this.solutionGrid[i][stemColumn] = stemArray[i];
         }
@@ -134,7 +145,8 @@ class Puzzle {
     }
 
     /**
-     * Represents a Leaf object associated with a word and its matching stem indices.
+     * Represents a Leaf object associated with a word and its matching stem
+     * indices.
      */
     private class Leaf {
         private String word;
@@ -169,10 +181,13 @@ class Puzzle {
     }
 
     /**
-     * Finds and returns a list of Leaf objects with matching stem indices for each leaf word.
+     * Finds and returns a list of Leaf objects with matching stem indices for each
+     * leaf word.
+     * 
      * @param stemArray - The array representing the stem.
-     * @param leaves - An array of leaf words.
-     * @return - A list of Leaf objects with matching stem indices for each leaf word.
+     * @param leaves    - An array of leaf words.
+     * @return - A list of Leaf objects with matching stem indices for each leaf
+     *         word.
      */
     private ArrayList<Leaf> findMatchingRows(char[] stemArray, String[] leaves) {
         ArrayList<Leaf> matchingRows = new ArrayList<>();
@@ -185,10 +200,13 @@ class Puzzle {
 
     /**
      * Inserts a Leaf at a specified row and random valid column.
-     * @param leaf The Leaf object to insert.
-     * @param matchingCharacter The character in the leaf word that matches the stem.
-     * @param matchingRow The row in the solution grid where the leaf will be inserted.
-     * @param stemColumn The column of the stem in the solution grid.
+     * 
+     * @param leaf              The Leaf object to insert.
+     * @param matchingCharacter The character in the leaf word that matches the
+     *                          stem.
+     * @param matchingRow       The row in the solution grid where the leaf will be
+     *                          inserted.
+     * @param stemColumn        The column of the stem in the solution grid.
      */
     private void insertLeaf(Leaf leaf, char matchingCharacter,
             int matchingRow, int stemColumn) {
@@ -228,9 +246,10 @@ class Puzzle {
 
     /**
      * Converts a string representation of a grid into a 2D char array.
+     * 
      * @param gridString - The string representation of the grid.
-     * @param rows - The number of rows in the grid.
-     * @param columns - The number of columns in the grid.
+     * @param rows       - The number of rows in the grid.
+     * @param columns    - The number of columns in the grid.
      * @return - The 2D char array representation of the grid.
      */
     private char[][] convertStringToGrid(String gridString, int rows, int columns) {
@@ -246,12 +265,16 @@ class Puzzle {
     /**
      * Updates the puzzle grid in response to user input.
      * The user may guess either a character or a word.
-     *      Case 1: If the user input is a single character (character guess), all occurrences of
+     * Case 1: If the user input is a single character (character guess), all
+     * occurrences of
      * the character in the solution grid will be revealed
-     *      Case 2: If the user input consists of 2 or more characters (word guess), the stem and
+     * Case 2: If the user input consists of 2 or more characters (word guess), the
+     * stem and
      * leaves will be checked for a match. If a match is found, it will be revealed
-     * A flag indicating a successful reveal (i.e., a puzzle update) is returned. This flag is also
+     * A flag indicating a successful reveal (i.e., a puzzle update) is returned.
+     * This flag is also
      * set to true if the user guesses something that is already revealed.
+     * 
      * @param input - The user's input.
      * @return - true if the puzzle grid was updated successfully, false otherwise.
      */
@@ -273,7 +296,7 @@ class Puzzle {
             // Multiple character input - stem match
             if (input.equals(this.stem)) {
                 for (int i = 0; i < this.rows; i++) {
-                    this.puzzleGrid[i][(this.columns - 1) / 2] = inputArray[i];
+                    this.puzzleGrid[i][(this.columns - 2) / 2] = inputArray[i];
                 }
                 return true;
             }
@@ -292,7 +315,9 @@ class Puzzle {
     }
 
     /**
-     * Checks if the puzzle is complete (i.e., puzzle grid matches the solution grid).
+     * Checks if the puzzle is complete (i.e., puzzle grid matches the solution
+     * grid).
+     * 
      * @return - true if the puzzle is solved, false otherwise.
      */
     public boolean checkPuzzleSolved() {
@@ -301,6 +326,7 @@ class Puzzle {
 
     /**
      * Exports the puzzle as a string.
+     * 
      * @return - The string representation of the puzzle grid.
      */
     public String getPuzzleString() {
@@ -309,6 +335,7 @@ class Puzzle {
 
     /**
      * Exports the solved puzzle as a string.
+     * 
      * @return - The string representation of the solution grid.
      */
     public String getSolutionString() {
@@ -317,6 +344,7 @@ class Puzzle {
 
     /**
      * Converts a 2D char array grid into a string.
+     * 
      * @param grid - The 2D char array grid to convert.
      * @return - The string representation of the grid.
      */

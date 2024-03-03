@@ -21,8 +21,9 @@ public class GameState {
 
     /**
      * Constructs a game state with a play state.
+     * 
      * @param attempts - The number of attempts.
-     * @param words - The array of words.
+     * @param words    - The array of words.
      */
     public GameState(int attempts, String[] words) {
         this.state = Constants.PLAY_STATE;
@@ -33,6 +34,7 @@ public class GameState {
 
     /**
      * Constructs a game state from serialized data.
+     * 
      * @param data - The serialized data representing the game state.
      */
     public GameState(String data) {
@@ -53,6 +55,7 @@ public class GameState {
 
     /**
      * Gets the state of the game.
+     * 
      * @return - The state of the game.
      */
     public String getState() {
@@ -61,6 +64,7 @@ public class GameState {
 
     /**
      * Sets the state of the game.
+     * 
      * @param state - The state to set.
      */
     public void setState(String state) {
@@ -69,6 +73,7 @@ public class GameState {
 
     /**
      * Gets the number of attempts remaining.
+     * 
      * @return - The number of attempts remaining.
      */
     public int getAttempts() {
@@ -84,6 +89,7 @@ public class GameState {
 
     /**
      * Gets the array of words.
+     * 
      * @return - The array of words.
      */
     public String[] getWords() {
@@ -92,6 +98,7 @@ public class GameState {
 
     /**
      * Gets the puzzle.
+     * 
      * @return - The puzzle.
      */
     public Puzzle getPuzzle() {
@@ -100,6 +107,7 @@ public class GameState {
 
     /**
      * Gets the string representation of the game state.
+     * 
      * @return - The string representation of the game state.
      */
     public String getGameStateString() {

@@ -2,14 +2,19 @@ package Client;
 
 import java.io.*;
 import java.net.*;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Client {
     static final String MESSAGE_END_DELIM = "*End of Message*";
     static final String host = "localhost";
-    static final int port = 8080;
 
     public static void main(String[] args) {
+        if (args.length != 1) {
+            System.exit(1);
+        }
+        int port = Integer.parseInt(args[0]);
+
         Socket clientSocket = null;
         try {
             clientSocket = new Socket(host, port);
@@ -39,6 +44,8 @@ public class Client {
 
         } catch (IOException e) {
             System.err.println("Error: could not communicate with server");
+        } catch (NoSuchElementException e) {
+            System.err.println("Client closed.");
         }
     }
 
@@ -58,10 +65,8 @@ public class Client {
             }
             System.out.println(stringBuilder.toString());
         } catch (IOException e) {
-            System.err.println("Error: could not print server output. Exiting");
-            System.exit(0);
+            System.err.println("Error: could not get server output.");
             return;
-
         }
     }
 }
